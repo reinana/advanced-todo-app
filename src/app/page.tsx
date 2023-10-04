@@ -1,44 +1,25 @@
-import Image from "next/image";
-import Calendar from "./components/Calendar";
+import CalendarHeader from "./components/CalendarHeader";
+import dayjs from "dayjs";
+import { Task } from "@/type";
 
-export default function Home() {
-    const weeks = ["日", "月", "火", "水", "木", "金", "土"];
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const startDate = new Date(year, month - 1, 1); // 月の最初の日を取得
-    const endDate = new Date(year, month, 0); // 月の最後の日を取得
-    const endDayCount = endDate.getDate(); // 月の末日
-    const startDay = startDate.getDay(); // 月の最初の日の曜日を取得
-    let dayCount = 1; // 日にちのカウント
-    let calendarHtml = ""; // HTMLを組み立てる変数
+export default async function Home() {
+    // supabaseから取得する RLS enabledをdisableに変更しないとできなかった
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+    const res = await fetch(`${API_URL}/api/todo`, { cache: "no-store" }); // 全記事取得はssrで
+    const tasks: Task[] = await res.json();
+
+    const now = dayjs(); // 現在の日付情報を取得
+    const year: string = now.format("YYYY");
+    const result = await fetch(`${API_URL}/api/holidays?year=${year}`, {
+        cache: "no-store",
+    }); // 全記事取得はssrで
+    const holidays = await result.json();
+
     return (
-        <div className="flex flex-col items-center p-6">
-            <Calendar/>
-
-        </div>
+        <>
+            <div>
+                <CalendarHeader tasks={tasks} initialHolidays={holidays} />
+            </div>
+        </>
     );
 }
-
-// // 曜日の行を作成
-// for (let i = 0; i < weeks.length; i++) {
-//     calendarHtml += '<td>' + weeks[i] + '</td>'
-// }
-
-// for (let w = 0; w < 6; w++) {
-//     calendarHtml += '<tr>'
-
-//     for (let d = 0; d < 7; d++) {
-//         if (w == 0 && d < startDay) {
-//             // 1行目で1日の曜日の前
-//             calendarHtml += '<td></td>'
-//         } else if (dayCount > endDayCount) {
-//             // 末尾の日数を超えた
-//             calendarHtml += '<td></td>'
-//         } else {
-//             calendarHtml += '<td>' + dayCount + '</td>'
-//             dayCount++
-//         }
-//     }
-//     calendarHtml += '</tr>'
-// }
